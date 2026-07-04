@@ -22,4 +22,7 @@ router.put('/:id', updateExpenseValidator, expenseController.updateExpense);
 // DELETE /api/expenses/:id
 router.delete('/:id', expenseController.deleteExpense);
 
+// PATCH /api/expenses/:id/restore
+router.patch('/:id/restore', expenseController.restoreExpense);
+
 module.exports = router;

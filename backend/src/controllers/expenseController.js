@@ -149,10 +149,38 @@ const deleteExpense = async (req, res) => {
   }
 };
 
+const restoreExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const existingExpense = await prisma.expense.findFirst({
+      where: { id: parseInt(id), userId, isDeleted: true }
+    });
+
+    if (!existingExpense) {
+      return res.status(404).json({ error: 'Deleted expense not found' });
+    }
+
+    await prisma.expense.update({
+      where: { id: parseInt(id) },
+      data: { isDeleted: false }
+    });
+
+    res.status(200).json({
+      message: 'Expense restored successfully'
+    });
+  } catch (error) {
+    console.error('Restore expense error:', error);
+    res.status(500).json({ error: 'Internal server error while restoring expense' });
+  }
+};
+
 module.exports = {
   createExpense,
   getExpenses,
   getExpenseById,
   updateExpense,
-  deleteExpense
+  deleteExpense,
+  restoreExpense
 };
