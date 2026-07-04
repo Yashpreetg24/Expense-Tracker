@@ -35,12 +35,34 @@ const createExpense = async (req, res) => {
 const getExpenses = async (req, res) => {
   try {
     const userId = req.user.id;
+    const { categoryId, paymentMethodId, startDate, endDate, minAmount, maxAmount } = req.query;
+
+    const where = {
+      userId,
+      isDeleted: false
+    };
+
+    if (categoryId) {
+      where.categoryId = parseInt(categoryId);
+    }
+    if (paymentMethodId) {
+      where.paymentMethodId = parseInt(paymentMethodId);
+    }
+    
+    if (startDate || endDate) {
+      where.expenseDate = {};
+      if (startDate) where.expenseDate.gte = new Date(startDate);
+      if (endDate) where.expenseDate.lte = new Date(endDate);
+    }
+
+    if (minAmount || maxAmount) {
+      where.amount = {};
+      if (minAmount) where.amount.gte = parseFloat(minAmount);
+      if (maxAmount) where.amount.lte = parseFloat(maxAmount);
+    }
 
     const expenses = await prisma.expense.findMany({
-      where: {
-        userId,
-        isDeleted: false
-      },
+      where,
       include: {
         category: true,
         paymentMethod: true
