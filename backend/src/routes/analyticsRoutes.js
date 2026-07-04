@@ -12,4 +12,10 @@ router.get('/monthly', analyticsController.getMonthlySummary);
 // GET /api/analytics/category
 router.get('/category', analyticsController.getCategorySpend);
 
+// GET /api/analytics/category-count
+router.get('/category-count', analyticsController.getCategoryCount);
+
+// GET /api/analytics/recent
+router.get('/recent', analyticsController.getRecentTransactions);
+
 module.exports = router;

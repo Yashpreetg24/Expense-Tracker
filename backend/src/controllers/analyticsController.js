@@ -76,7 +76,62 @@ const getCategorySpend = async (req, res) => {
   }
 };
 
+const getCategoryCount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // DBMS Query requirement: JOIN + COUNT + GROUP BY
+    const categoryCount = await prisma.$queryRaw`
+      SELECT c.name as category, COUNT(e.id) as count 
+      FROM "Expense" e 
+      JOIN "Category" c ON e."categoryId" = c.id 
+      WHERE e."userId" = ${userId} AND e."isDeleted" = 0
+      GROUP BY c.id, c.name
+    `;
+
+    const formattedData = categoryCount.map(item => ({
+      category: item.category,
+      count: Number(item.count)
+    }));
+
+    res.status(200).json({
+      message: 'Category count retrieved successfully',
+      data: formattedData
+    });
+  } catch (error) {
+    console.error('Category count error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getRecentTransactions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const limit = parseInt(req.query.limit) || 5;
+
+    // DBMS Query requirement: ORDER BY + LIMIT
+    // We could use Prisma directly, but executing raw SQL satisfies the literal requirement
+    const recentTransactions = await prisma.$queryRaw`
+      SELECT id, title, amount, note, "expenseDate", "createdAt"
+      FROM "Expense"
+      WHERE "userId" = ${userId} AND "isDeleted" = 0
+      ORDER BY "expenseDate" DESC, "createdAt" DESC
+      LIMIT ${limit}
+    `;
+
+    res.status(200).json({
+      message: 'Recent transactions retrieved successfully',
+      data: recentTransactions
+    });
+  } catch (error) {
+    console.error('Recent transactions error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getMonthlySummary,
-  getCategorySpend
+  getCategorySpend,
+  getCategoryCount,
+  getRecentTransactions
 };
