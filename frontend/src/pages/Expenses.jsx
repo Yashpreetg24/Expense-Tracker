@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { format } from 'date-fns';
-import { Plus, Search, MoreVertical, Edit2, Trash2, RotateCcw } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ExpenseForm from '../components/ExpenseForm';
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
@@ -13,6 +14,10 @@ const Expenses = () => {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
+  
+  // Modal State
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
   
   const fetchExpenses = async () => {
     setLoading(true);
@@ -57,6 +62,16 @@ const Expenses = () => {
     }
   };
 
+  const openAddForm = () => {
+    setEditingExpense(null);
+    setIsFormOpen(true);
+  };
+
+  const openEditForm = (expense) => {
+    setEditingExpense(expense);
+    setIsFormOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -64,7 +79,10 @@ const Expenses = () => {
           <h1 className="text-2xl font-bold text-gray-900">Expenses</h1>
           <p className="text-gray-500">Manage and track your expenses.</p>
         </div>
-        <button className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors">
+        <button 
+          onClick={openAddForm}
+          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors"
+        >
           <Plus className="w-5 h-5" />
           Add Expense
         </button>
@@ -85,7 +103,7 @@ const Expenses = () => {
           <select 
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-xl outline-none"
+            className="px-4 py-2 border border-gray-200 rounded-xl outline-none bg-white"
           >
             <option value="date">Date</option>
             <option value="amount">Amount</option>
@@ -93,7 +111,7 @@ const Expenses = () => {
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-xl outline-none"
+            className="px-4 py-2 border border-gray-200 rounded-xl outline-none bg-white"
           >
             <option value="desc">Descending</option>
             <option value="asc">Ascending</option>
@@ -138,7 +156,7 @@ const Expenses = () => {
                       {expense.note && <p className="text-xs text-gray-500 mt-1 truncate max-w-[200px]">{expense.note}</p>}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
                         {expense.category?.name}
                       </span>
                     </td>
@@ -150,7 +168,10 @@ const Expenses = () => {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button className="p-2 text-gray-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
+                        <button 
+                          onClick={() => openEditForm(expense)}
+                          className="p-2 text-gray-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+                        >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button 
@@ -193,6 +214,15 @@ const Expenses = () => {
           </div>
         )}
       </div>
+
+      <ExpenseForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        expense={editingExpense}
+        onSuccess={() => {
+          fetchExpenses();
+        }}
+      />
     </div>
   );
 };
