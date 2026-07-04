@@ -56,7 +56,7 @@ const getCategorySpend = async (req, res) => {
       SELECT c.name as category, SUM(e.amount) as total 
       FROM "Expense" e 
       JOIN "Category" c ON e."categoryId" = c.id 
-      WHERE e."userId" = ${userId} AND e."isDeleted" = 0
+      WHERE e."userId" = ${userId} AND e."isDeleted" = false
       GROUP BY c.id, c.name
     `;
 
@@ -85,7 +85,7 @@ const getCategoryCount = async (req, res) => {
       SELECT c.name as category, COUNT(e.id) as count 
       FROM "Expense" e 
       JOIN "Category" c ON e."categoryId" = c.id 
-      WHERE e."userId" = ${userId} AND e."isDeleted" = 0
+      WHERE e."userId" = ${userId} AND e."isDeleted" = false
       GROUP BY c.id, c.name
     `;
 
@@ -114,7 +114,7 @@ const getRecentTransactions = async (req, res) => {
     const recentTransactions = await prisma.$queryRaw`
       SELECT id, title, amount, note, "expenseDate", "createdAt"
       FROM "Expense"
-      WHERE "userId" = ${userId} AND "isDeleted" = 0
+      WHERE "userId" = ${userId} AND "isDeleted" = false
       ORDER BY "expenseDate" DESC, "createdAt" DESC
       LIMIT ${limit}
     `;
