@@ -80,7 +80,16 @@ const login = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  // req.user is attached by the authenticate middleware
+  res.status(200).json({
+    message: 'Profile retrieved successfully',
+    user: req.user
+  });
+};
+
 module.exports = {
   register,
   login,
+  getProfile,
 };
