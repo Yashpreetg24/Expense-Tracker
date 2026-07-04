@@ -35,19 +35,18 @@ const createExpense = async (req, res) => {
 const getExpenses = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { categoryId, paymentMethodId, startDate, endDate, minAmount, maxAmount } = req.query;
+    const { 
+      categoryId, paymentMethodId, startDate, endDate, minAmount, maxAmount,
+      search, sortBy, sortOrder, page, limit
+    } = req.query;
 
     const where = {
       userId,
       isDeleted: false
     };
 
-    if (categoryId) {
-      where.categoryId = parseInt(categoryId);
-    }
-    if (paymentMethodId) {
-      where.paymentMethodId = parseInt(paymentMethodId);
-    }
+    if (categoryId) where.categoryId = parseInt(categoryId);
+    if (paymentMethodId) where.paymentMethodId = parseInt(paymentMethodId);
     
     if (startDate || endDate) {
       where.expenseDate = {};
@@ -61,20 +60,48 @@ const getExpenses = async (req, res) => {
       if (maxAmount) where.amount.lte = parseFloat(maxAmount);
     }
 
-    const expenses = await prisma.expense.findMany({
-      where,
-      include: {
-        category: true,
-        paymentMethod: true
-      },
-      orderBy: {
-        expenseDate: 'desc'
-      }
-    });
+    if (search) {
+      where.OR = [
+        { title: { contains: search } },
+        { note: { contains: search } }
+      ];
+    }
+
+    // Sorting
+    const orderBy = {};
+    const validSortFields = { date: 'expenseDate', amount: 'amount' };
+    const sortField = validSortFields[sortBy] || 'expenseDate';
+    const sortDir = sortOrder === 'asc' ? 'asc' : 'desc';
+    orderBy[sortField] = sortDir;
+
+    // Pagination
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    const [total, expenses] = await Promise.all([
+      prisma.expense.count({ where }),
+      prisma.expense.findMany({
+        where,
+        include: {
+          category: true,
+          paymentMethod: true
+        },
+        orderBy,
+        skip,
+        take: limitNum
+      })
+    ]);
 
     res.status(200).json({
       message: 'Expenses retrieved successfully',
-      expenses
+      expenses,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum)
+      }
     });
   } catch (error) {
     console.error('Get expenses error:', error);
