@@ -10,6 +10,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 const authRoutes = require('./routes/authRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
 // Health Check Route
 app.get('/health', (req, res) => {
@@ -18,5 +19,6 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 module.exports = app;
