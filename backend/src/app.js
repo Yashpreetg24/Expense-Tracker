@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const { notFoundHandler, globalErrorHandler } = require('./middleware/errorHandler');
 
 // Health Check Route
 app.get('/health', (req, res) => {
@@ -24,5 +25,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/analytics', analyticsRoutes);
+
+// Error Handling Middleware
+app.use(notFoundHandler);
+app.use(globalErrorHandler);
 
 module.exports = app;
