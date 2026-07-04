@@ -60,7 +60,99 @@ const getExpenses = async (req, res) => {
   }
 };
 
+const getExpenseById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const expense = await prisma.expense.findFirst({
+      where: {
+        id: parseInt(id),
+        userId,
+        isDeleted: false
+      },
+      include: {
+        category: true,
+        paymentMethod: true
+      }
+    });
+
+    if (!expense) {
+      return res.status(404).json({ error: 'Expense not found' });
+    }
+
+    res.status(200).json({
+      message: 'Expense retrieved successfully',
+      expense
+    });
+  } catch (error) {
+    console.error('Get expense error:', error);
+    res.status(500).json({ error: 'Internal server error while retrieving expense' });
+  }
+};
+
+const updateExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const updateData = req.body;
+
+    // Verify ownership and existence
+    const existingExpense = await prisma.expense.findFirst({
+      where: { id: parseInt(id), userId, isDeleted: false }
+    });
+
+    if (!existingExpense) {
+      return res.status(404).json({ error: 'Expense not found' });
+    }
+
+    const expense = await prisma.expense.update({
+      where: { id: parseInt(id) },
+      data: updateData,
+      include: { category: true, paymentMethod: true }
+    });
+
+    res.status(200).json({
+      message: 'Expense updated successfully',
+      expense
+    });
+  } catch (error) {
+    console.error('Update expense error:', error);
+    res.status(500).json({ error: 'Internal server error while updating expense' });
+  }
+};
+
+const deleteExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const existingExpense = await prisma.expense.findFirst({
+      where: { id: parseInt(id), userId, isDeleted: false }
+    });
+
+    if (!existingExpense) {
+      return res.status(404).json({ error: 'Expense not found' });
+    }
+
+    await prisma.expense.update({
+      where: { id: parseInt(id) },
+      data: { isDeleted: true }
+    });
+
+    res.status(200).json({
+      message: 'Expense deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete expense error:', error);
+    res.status(500).json({ error: 'Internal server error while deleting expense' });
+  }
+};
+
 module.exports = {
   createExpense,
-  getExpenses
+  getExpenses,
+  getExpenseById,
+  updateExpense,
+  deleteExpense
 };
